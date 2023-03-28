@@ -887,3 +887,70 @@ __config_alerting_rules:
       annotations:
         summary: Ceph PG unavailable (instance {{ '{{ $labels.instance }}' }})
         description: "Some Ceph placement groups are unavailable.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+
+  - name: codeDNS
+    rules:
+    - alert: CoreDNSDown
+      expr: absent(up{k8s_app="kube-dns"} == 1)
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: CoreDNS is Down
+        description: "{{ 'CoreDNS has been down for a long time\n VALUE = {{ $value }}\n ' }}"
+
+    - alert: CoreDNSLatencyHigh
+      expr: histogram_quantile(0.99, sum(rate(coredns_dns_request_duration_seconds_bucket{k8s_app="kube-dns"}[5m])) by(server, zone, le)) > 4
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: "{{ 'CoreDNS has high latency for server {{ $labels.server }}' }}"
+        description: "{{ 'CoreDNS has 99th percentile latency of {{ $value }} seconds for server {{ $labels.server }} zone {{ $labels.zone }} \n LABELS = {{ $labels }}' }}"
+
+    - alert: CoreDNSErrorsHigh
+      expr: sum(rate(coredns_dns_responses_total{k8s_app="kube-dns",rcode="SERVFAIL"}[5m])) / sum(rate(coredns_dns_responses_total{k8s_app="kube-dns"}[5m])) > 0.01
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: CodeDNS has high errors
+        description: "{{ 'CoreDNS is returning SERVFAIL for {{ $value | humanizePercentage }} of requests. \n LABELS = {{ $labels }}' }}"
+
+    - alert: CoreDNSForwardLatencyHigh
+      expr: histogram_quantile(0.99, sum(rate(coredns_forward_request_duration_seconds_bucket{k8s_app="kube-dns"}[5m])) by(to, le)) > 4
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: "{{ 'CoreDNS has high latency for forward to {{ $labels.to }}' }}"
+        description: "{{ 'CoreDNS has 99th percentile latency of {{ $value }} seconds for forward to {{ $labels.to }} \n LABELS = {{ $labels }}' }}"
+
+    - alert: CoreDNSForwardErrorsHigh
+      expr: sum(rate(coredns_forward_responses_total{k8s_app="kube-dns",rcode="SERVFAIL"}[5m])) / sum(rate(coredns_forward_responses_total{k8s_app="kube-dns"}[5m])) > 0.01
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: CodeDNS Forward has high errors
+        description: "{{ 'CoreDNS is returning SERVFAIL for {{ $value | humanizePercentage }} of forward requests. \n LABELS = {{ $labels }}' }}"
+
+    #number of failed health checks per upstream
+    - alert: CoreDNSForwardHealthcheckFailureCount
+      expr: sum(rate(coredns_forward_healthcheck_failures_total{k8s_app="kube-dns"}[5m])) by (to) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "{{ 'CoreDNS health checks have failed to upstream server {{ $labels.to }}' }}"
+        description: "{{ 'CoreDNS health checks have failed to upstream server {{ $labels.to }} \n LABELS = {{ $labels }}' }}"
+
+    #counter of when all upstreams are unhealthy, and we are randomly (this always uses the random policy) spraying to an upstream
+    - alert: CoreDNSForwardHealthcheckBrokenCount
+      expr: sum(rate(coredns_forward_healthcheck_broken_total{k8s_app="kube-dns"}[5m]))by(instance) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "{{ 'CoreDNS {{ $labels.instance }} health checks have failed for all upstream servers' }}"
+        description: "{{ 'CoreDNS {{ $labels.instance }} health checks have failed for all upstream servers \n LABELS = {{ $labels }}' }}"
