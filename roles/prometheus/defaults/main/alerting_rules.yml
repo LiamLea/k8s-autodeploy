@@ -888,11 +888,12 @@ __config_alerting_rules:
         summary: Ceph PG unavailable (instance {{ '{{ $labels.instance }}' }})
         description: "Some Ceph placement groups are unavailable.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
 
+  #source: https://monitoring.mixins.dev/coredns/
   - name: codeDNS
     rules:
     - alert: CoreDNSDown
       expr: absent(up{k8s_app="kube-dns"} == 1)
-      for: 10m
+      for: 1m
       labels:
         severity: critical
       annotations:
@@ -937,8 +938,8 @@ __config_alerting_rules:
 
     #number of failed health checks per upstream
     - alert: CoreDNSForwardHealthcheckFailureCount
-      expr: sum(rate(coredns_forward_healthcheck_failures_total{k8s_app="kube-dns"}[5m])) by (to) > 0
-      for: 10m
+      expr: sum(rate(coredns_forward_healthcheck_failures_total{k8s_app="kube-dns"}[1m])) by (to) > 0
+      for: 15m
       labels:
         severity: warning
       annotations:
@@ -947,8 +948,8 @@ __config_alerting_rules:
 
     #counter of when all upstreams are unhealthy, and we are randomly (this always uses the random policy) spraying to an upstream
     - alert: CoreDNSForwardHealthcheckBrokenCount
-      expr: sum(rate(coredns_forward_healthcheck_broken_total{k8s_app="kube-dns"}[5m]))by(instance) > 0
-      for: 10m
+      expr: sum(rate(coredns_forward_healthcheck_broken_total{k8s_app="kube-dns"}[2m]))by(instance) > 0
+      for: 5m
       labels:
         severity: warning
       annotations:
