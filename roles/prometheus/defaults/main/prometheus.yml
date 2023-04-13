@@ -36,6 +36,8 @@ __config_prometheus:
         regex: (.+)
         target_label: __metrics_path__
         replacement: /api/v1/nodes/$1/proxy/metrics
+      - action: labeldrop
+        regex: ^(cpu_|host_|hyperv_|kubevirt_|beta_).*
 
   - job_name: 'kubernetes-nodes-cadvisor'
     scheme: https
@@ -54,6 +56,8 @@ __config_prometheus:
         regex: (.+)
         target_label: __metrics_path__
         replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+      - action: labeldrop
+        regex: ^(cpu_|host_|hyperv_|kubevirt_|beta_).*
 
   #service must have the annotation: prometheus.io/scrape: "true"
   #if there is path(starting with /), add the annotation: prometheus.io/path: <path>
