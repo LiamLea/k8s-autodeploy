@@ -226,7 +226,7 @@ __config_alerting_rules:
         severity: warning
       annotations:
         summary: "{{ 'Host unusual disk read latency: {{ $labels.instance }}' }}"
-        description: "{{ 'VALUE = {{ $value }} seconds in 1 minute' }}"
+        description: "{{ 'VALUE = {{ $value }} seconds per read in 1 minute' }}"
 
     - alert: HostUnusualDiskWriteLatency
       expr: rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0
@@ -235,7 +235,7 @@ __config_alerting_rules:
         severity: warning
       annotations:
         summary: "{{ 'Host unusual disk write latency: {{ $labels.instance }}' }}"
-        description: "{{ 'VALUE = {{ $value }} seconds in 1 minute' }}"
+        description: "{{ 'VALUE = {{ $value }} seconds per write in 1 minute' }}"
 
     - alert: HostHighCpuLoad
       expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
@@ -426,9 +426,9 @@ __config_alerting_rules:
         severity: critical
       annotations:
         summary: "{{ 'Kubernetes Volume full in one day: {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }}' }}"
-        description: "{{ 'VALUE = {{ $value | humanize }}% free' }}"
+        description: "{{ 'VALUE = {{ $value | humanize }} bytes free' }}"
 
-    - alert: KubernetesPersistentvolumeError
+    - alert: KubernetesPersistentVolumeError
       expr: kube_persistentvolume_status_phase{phase=~"Failed|Pending"} > 0
       for: 0m
       labels:
@@ -778,8 +778,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: Ceph State (instance {{ '{{ $labels.instance }}' }})
-        description: "Ceph instance unhealthy\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph unhealthy: {{ $labels.instance }}' }}"
+        description: "{{ 'VALUE = {{ $value }}' }}"
 
     - alert: CephMonitorClockSkew
       expr: abs(ceph_monitor_clock_skew_seconds) > 0.2
@@ -787,8 +787,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph monitor clock skew (instance {{ '{{ $labels.instance }}' }})
-        description: "Ceph monitor clock skew detected. Please check ntp and hardware clock settings\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph monitor clock skew: {{ $labels.instance }}' }}"
+        description: "{{ 'VALUE = {{ $value }} seconds'}}"
 
     - alert: CephMonitorLowSpace
       expr: ceph_monitor_avail_percent < 10
@@ -796,8 +796,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph monitor low space (instance {{ '{{ $labels.instance }} '}})
-        description: "Ceph monitor storage is low.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph monitor low space: {{ $labels.instance }}' }}"
+        description: "{{ 'VALUE = {{ $value }}% free' }}"
 
     - alert: CephOsdDown
       expr: ceph_osd_up == 0
@@ -805,8 +805,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: Ceph OSD Down (instance {{ '{{ $labels.instance }}' }})
-        description: "Ceph Object Storage Daemon Down\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph OSD Down: {{ $labels.instance }} {{ $labels.ceph_daemon }}' }}"
+        description: "{{ 'OSD = {{ $labels.ceph_daemon }}' }}"
 
     - alert: CephHighOsdLatency
       expr: ceph_osd_perf_apply_latency_seconds > 5
@@ -814,8 +814,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph high OSD latency (instance {{ '{{ $labels.instance }}' }})
-        description: "Ceph Object Storage Daemon latency is high. Please check if it doesn't stuck in weird state.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph high OSD latency: {{ $labels.instance }} {{ $labels.ceph_daemon }}' }}"
+        description: "{{ 'VALUE = {{ $value }} seconds latency' }}"
 
     - alert: CephOsdLowSpace
       expr: ceph_osd_utilization > 90
@@ -823,17 +823,17 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph OSD low space (instance {{ '{{ $labels.instance }}' }})
-        description: "Ceph Object Storage Daemon is going out of space. Please add more disks.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph OSD low space: {{ $labels.instance }} {{ $labels.ceph_daemon }}' }}"
+        description: "{{ 'VALUE = {{ $value }}% utilization' }}"
 
-    # - alert: CephOsdReweighted
-    #   expr: ceph_osd_weight < 1
-    #   for: 2m
-    #   labels:
-    #     severity: warning
-    #   annotations:
-    #     summary: Ceph OSD reweighted (instance {{ '{{ $labels.instance }}' }})
-    #     description: "Ceph Object Storage Daemon takes too much time to resize.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+    - alert: CephOsdReweighted
+      expr: ceph_osd_weight < 1
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "{{ 'Ceph OSD reweighted: {{ $labels.instance }} {{ $labels.ceph_daemon }}' }}"
+        description: "{{ 'VALUE = {{ $value }} weight for 10 minutes' }}"
 
     - alert: CephPgDown
       expr: ceph_pg_down > 0
@@ -841,8 +841,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: Ceph PG down (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are down. Please ensure that all the data are available.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG down: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
     - alert: CephPgIncomplete
       expr: ceph_pg_incomplete > 0
@@ -850,8 +850,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: Ceph PG incomplete (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are incomplete. Please ensure that all the data are available.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG incomplete: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
     - alert: CephPgInconsistent
       expr: ceph_pg_inconsistent > 0
@@ -859,8 +859,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph PG inconsistent (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are inconsistent. Data is available but inconsistent across nodes.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG inconsistent: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
     - alert: CephPgActivationLong
       expr: ceph_pg_activating > 0
@@ -868,8 +868,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph PG activation long (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are too long to activate.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG activation long: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
     - alert: CephPgBackfillFull
       expr: ceph_pg_backfill_toofull > 0
@@ -877,8 +877,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: Ceph PG backfill full (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are located on full Object Storage Daemon on cluster. Those PGs can be unavailable shortly. Please check OSDs, change weight or reconfigure CRUSH rules.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG backfill full: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
     - alert: CephPgUnavailable
       expr: ceph_pg_total - ceph_pg_active > 0
@@ -886,20 +886,20 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: Ceph PG unavailable (instance {{ '{{ $labels.instance }}' }})
-        description: "Some Ceph placement groups are unavailable.\n  {{ 'VALUE = {{ $value }}\n  LABELS = {{ $labels }}' }}"
+        summary: "{{ 'Ceph PG unavailable: {{ $labels.instance }} pool_id = {{ $labels.pool_id }}' }}"
+        description: "{{ 'VALUE = {{ $value }} PGs' }}"
 
   #source: https://monitoring.mixins.dev/coredns/
   - name: codeDNS
     rules:
     - alert: CoreDNSDown
-      expr: absent(up{k8s_app="kube-dns"} == 1)
+      expr: up{k8s_app="kube-dns"} == 0
       for: 1m
       labels:
         severity: critical
       annotations:
-        summary: CoreDNS is Down
-        description: "{{ 'CoreDNS has been down for a long time\n VALUE = {{ $value }}\n ' }}"
+        summary: "{{ 'CoreDNS is Down'}}"
+        description: "{{ 'CoreDNS has been down for 1 minute' }}"
 
     - alert: CoreDNSLatencyHigh
       expr: histogram_quantile(0.99, sum(rate(coredns_dns_request_duration_seconds_bucket{k8s_app="kube-dns"}[5m])) by(server, zone, le)) > 4
@@ -907,8 +907,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: "{{ 'CoreDNS has high latency for server {{ $labels.server }}' }}"
-        description: "{{ 'CoreDNS has 99th percentile latency of {{ $value }} seconds for server {{ $labels.server }} zone {{ $labels.zone }} \n LABELS = {{ $labels }}' }}"
+        summary: "{{ 'CoreDNS has high latency for server: {{ $labels.server }}' }}"
+        description: "{{ 'SERVER = {{ $labels.server }} ZONE = {{ $labels.zone }} has 99th percentile latency of VALUE = {{ $value }} seconds' }}"
 
     - alert: CoreDNSErrorsHigh
       expr: sum(rate(coredns_dns_responses_total{k8s_app="kube-dns",rcode="SERVFAIL"}[5m])) / sum(rate(coredns_dns_responses_total{k8s_app="kube-dns"}[5m])) > 0.01
@@ -917,7 +917,7 @@ __config_alerting_rules:
         severity: critical
       annotations:
         summary: CodeDNS has high errors
-        description: "{{ 'CoreDNS is returning SERVFAIL for {{ $value | humanizePercentage }} of requests. \n LABELS = {{ $labels }}' }}"
+        description: "{{ 'VALUE = {{ $value | humanizePercentage }}%' }}"
 
     - alert: CoreDNSForwardLatencyHigh
       expr: histogram_quantile(0.99, sum(rate(coredns_forward_request_duration_seconds_bucket{k8s_app="kube-dns"}[5m])) by(to, le)) > 4
@@ -925,8 +925,8 @@ __config_alerting_rules:
       labels:
         severity: critical
       annotations:
-        summary: "{{ 'CoreDNS has high latency for forward to {{ $labels.to }}' }}"
-        description: "{{ 'CoreDNS has 99th percentile latency of {{ $value }} seconds for forward to {{ $labels.to }} \n LABELS = {{ $labels }}' }}"
+        summary: "{{ 'CoreDNS has high latency for forward to: {{ $labels.to }}' }}"
+        description: "{{ 'FORWARD = {{ $labels.to }} has 99th percentile latency of VALUE = {{ $value }} seconds' }}"
 
     - alert: CoreDNSForwardErrorsHigh
       expr: sum(rate(coredns_forward_responses_total{k8s_app="kube-dns",rcode="SERVFAIL"}[5m])) / sum(rate(coredns_forward_responses_total{k8s_app="kube-dns"}[5m])) > 0.01
@@ -935,7 +935,7 @@ __config_alerting_rules:
         severity: critical
       annotations:
         summary: CodeDNS Forward has high errors
-        description: "{{ 'CoreDNS is returning SERVFAIL for {{ $value | humanizePercentage }} of forward requests. \n LABELS = {{ $labels }}' }}"
+        description: "{{ 'VALUE = {{ $value | humanizePercentage }}%' }}"
 
     #number of failed health checks per upstream
     - alert: CoreDNSForwardHealthcheckFailureCount
@@ -944,8 +944,8 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: "{{ 'CoreDNS health checks have failed to upstream server {{ $labels.to }}' }}"
-        description: "{{ 'CoreDNS health checks have failed to upstream server {{ $labels.to }} \n LABELS = {{ $labels }}' }}"
+        summary: "{{ 'upstream server health check failed: {{ $labels.to }}' }}"
+        description: "{{ 'failed for 15 minutes' }}"
 
     #counter of when all upstreams are unhealthy, and we are randomly (this always uses the random policy) spraying to an upstream
     - alert: CoreDNSForwardHealthcheckBrokenCount
@@ -954,5 +954,5 @@ __config_alerting_rules:
       labels:
         severity: warning
       annotations:
-        summary: "{{ 'CoreDNS {{ $labels.instance }} health checks have failed for all upstream servers' }}"
-        description: "{{ 'CoreDNS {{ $labels.instance }} health checks have failed for all upstream servers \n LABELS = {{ $labels }}' }}"
+        summary: "{{ 'All upstream server health check failed' }}"
+        description: "{{ 'failed for 5 minutes' }}"

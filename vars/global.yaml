@@ -248,7 +248,7 @@ monitor:
       #  e.g. https://k8s.my.local:30443/prometheus
       #set /prometheus if you don't know the exact external_url or you can't access prometheus
       external_url: "https://{{ ingress.hosts.prometheus.host }}{% if ingress.hosts.prometheus.host != '' %}.{% endif %}{{ ingress.hosts.prometheus.domains[0] }}:{{ basic.ingress_nginx.config.https_port }}{{ ingress.hosts.prometheus.path }}"
-      # e.g. {send_resolved: true, url: "<url|no empty>", max_alerts: 5}
+      # e.g. {send_resolved: true, url: "<url|no empty>", max_alerts: 10}
       webhook_configs: []
       # e.g. {send_resolved: true, smarthost: smtp.qq.com:587 ,from: 1059202624@qq.com, to: 1059202624@qq.com, auth_username: 1059202624@qq.com, auth_password: 'xx'}
       email_configs: []

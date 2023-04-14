@@ -65,6 +65,10 @@
           tls:
           - secretName: "prometheus-ingress-secret"
             hosts: "{{ __prometheus_hosts }}"
+      alertRelabelConfigs:
+        alert_relabel_configs:
+        - action: labeldrop
+          regex: ^((helm_|cpu_|host_|hyperv_|kubevirt_|beta_).*|heritage)
 
       pushgateway:
         image:
