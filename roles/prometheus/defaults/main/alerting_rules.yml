@@ -483,8 +483,8 @@ __config_alerting_rules:
         description: "Pod has been in a non-ready state for longer than 5 minutes"
 
     - alert: KubernetesPodCrashLooping
-      expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
-      for: 2m
+      expr: kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}
+      for: 5m
       labels:
         severity: warning
       annotations:
@@ -590,6 +590,15 @@ __config_alerting_rules:
       annotations:
         summary: "{{ 'Kubernetes pod restarted: {{ $labels.namespace }}/{{ $labels.pod }}' }}"
         description: "{{ 'REASON = {{ $labels.reason }} '}}"
+
+    - alert: KubernetesTooManyPodsRestarted
+      expr: count(increase(kube_pod_container_status_restarts_total[5m]) > 0) > 10
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: "{{ 'Kubernetes too many pods restarted' }}"
+        description: "{{ '{{ $value }} pods restarted in 5 minutes'}}"
 
   - name: apiserver
     rules:
