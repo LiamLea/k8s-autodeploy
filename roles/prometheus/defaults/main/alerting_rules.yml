@@ -237,14 +237,23 @@ __config_alerting_rules:
         summary: "{{ 'Host unusual disk write latency: {{ $labels.instance }}' }}"
         description: "{{ 'VALUE = {{ $value }} seconds per write in 1 minute' }}"
 
-    - alert: HostHighCpuLoad
+    - alert: HostHighCpuUsage
       expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
       for: 0m
       labels:
         severity: warning
       annotations:
-        summary: "{{ 'Host high CPU load: {{ $labels.instance }}' }}"
+        summary: "{{ 'Host high CPU usage: {{ $labels.instance }}' }}"
         description: "{{ 'VALUE = {{ $value }}% usage in 2 minutes' }}"
+
+    - alert: HostHighSystemLoad
+      expr: node_load5 > count without(cpu, mode) (node_cpu_seconds_total{mode="idle"})*5
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: "{{ 'Host high System load: {{ $labels.instance }}' }}"
+        description: "{{ 'VALUE = {{ $value }} in 5 minutes' }}"
 
     - alert: HostCpuStealNoisyNeighbor
       expr: avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10
