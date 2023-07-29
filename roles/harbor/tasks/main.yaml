@@ -39,3 +39,21 @@
     when: prepare_result.rc == 0
 
   when: harbor_installed.rc != 0
+
+# to-do: create a service to make sure harbor started when host restarts
+
+# [Unit]
+# Description=Harbor
+# After=docker.service systemd-networkd.service systemd-resolved.service
+# Requires=docker.service
+# Documentation=http://github.com/vmware/harbor
+
+# [Service]
+# Type=simple
+# Restart=on-failure
+# RestartSec=5
+# ExecStart=/usr/local/bin/docker-compose -f {{ harbor_install_path }}/harbor/docker-compose.yml up
+# ExecStop=/usr/local/bin/docker-compose -f {{ harbor_install_path }}/harbor/docker-compose.yml down
+
+# [Install]
+# WantedBy=multi-user.target
