@@ -2,17 +2,17 @@
 
 #please set variables depending on your environment
 #local registry address
-my_registry="{{ target_registry }}"
+my_registry="{{ _target_registry }}"
 
 #匹配的镜像，会用${registry_prefix} 替换 其地址
 #没有匹配这里的镜像，都会在镜像前面加上${registry_prefix}
 #use | to match multiple registries
-prefix_replace_pattern="{{ prefix_replace_pattern }}"
+prefix_replace_pattern="{{ _prefix_replace_pattern }}"
 
 #匹配的镜像，会用${my_registry} 替换 其地址
 #没有匹配这里的镜像，都会在镜像前面加上${registry_prefix}
 #use | to match multiple registries
-address_replace_pattern="{{ address_replace_pattern }}"
+address_replace_pattern="{{ _address_replace_pattern }}"
 
 registry_prefix="${my_registry}/library"
 

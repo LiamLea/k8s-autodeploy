@@ -1,6 +1,14 @@
 - hosts: localhost
   gather_facts: True
   tasks:
+  - name: shell
+    shell: |
+      sed -i "s@http://security.debian.org@https://mirrors.huaweicloud.com@g" /etc/apt/sources.list
+      echo "deb https://mirrors.huaweicloud.com/kubernetes/apt/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+      apt-get update || echo "update failed"
+      apt-get install curl -y
+      curl -s https://mirrors.huaweicloud.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
+
   - name: install kubeadm
     apt:
       name: "kubeadm={{ kubernetes.version }}-00"

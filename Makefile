@@ -2,7 +2,7 @@
 
 ansible_image = liamlea/ansible:debian-2.10
 ansible_dir = $(shell pwd)
-docker_version = $(shell grep -Ev '^\s*\#|^\s*$$' global.yaml | grep -A 2 '^docker' | grep 'version' | awk '{print $$2}')
+docker_version = $(shell grep -Ev '^\s*\#|^\s*$$' vars/global.yaml | grep -A 2 '^docker' | grep 'version' | awk '{print $$2}')
 
 TASKS = init_localhost test install_harbor push_images download_packages operation
 TASKS_1 = storageclass basic monitor log service devops service_mesh

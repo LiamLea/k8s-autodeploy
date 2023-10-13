@@ -10,7 +10,7 @@
         - [（1）set global variables](#1set-global-variables)
         - [（2）set password](#2set-password)
       - [3.other configs](#3other-configs)
-        - [（1）config  packages repo](#1config-packages-repo)
+        - [（1）config  packages repo](#1config--packages-repo)
       - [4.init localhost](#4init-localhost)
       - [5.check all hosts](#5check-all-hosts)
       - [6.prepare images and charts](#6prepare-images-and-charts)
@@ -35,7 +35,10 @@
         - [（2） run push_images task](#2-run-push_images-task)
       - [4.download packages](#4download-packages)
         - [（1） set variables](#1-set-variables-1)
-        - [（2） run push_images task](#2-run-push_images-task-1)
+        - [（2） run download_packages task](#2-run-download_packages-task)
+      - [5.run operations](#5run-operations)
+        - [(1) set variables](#1-set-variables-2)
+        - [（2） run operations task](#2-run-operations-task)
     - [Monitor Task](#monitor-task)
       - [1.deploy monitor](#1deploy-monitor)
         - [（1）set global variables](#1set-global-variables-2)
@@ -57,7 +60,7 @@
         - [（1）set global variables](#1set-global-variables-6)
         - [（2）run service task](#2run-service-task-2)
     - [Author](#author)
-    - [📝 License](#license)
+    - [📝 License](#-license)
 
 <!-- /code_chunk_output -->
 
@@ -320,6 +323,9 @@ password:
 * yum
 ```shell
 ls roles/init/files/repo/centos-7/yum.repos.d/
+
+mv /etc/yum.repos.d /etc/yum.repos.bak
+cp -r roles/init/files/repo/centos-7/yum.repos.d /etc/
 ```
 * debian
 ```shell
@@ -596,9 +602,50 @@ download_packages:
       package_manager: "apt"
 ```
 
-##### （2） run push_images task
+##### （2） run download_packages task
 ```shell
 make download_packages
+```
+
+#### 5.run operations
+
+##### (1) set variables
+```shell
+vim vars/global.yaml
+```
+
+```yaml
+operations:
+  k8s:
+    kube_config: "/root/.kube/config"
+    operations:
+      label:
+        enabled: true
+        tasks:
+        - namespaces:
+          - "springblade"
+          controllers: [] #e.g. [{namespace: xx,name: xx,type: deployment}]
+          labels:      #e.g. ["istio-injection-"]
+          - "istio-injection=enabled"
+          annotations:
+          - "instrumentation.opentelemetry.io/inject-java={{ service_mesh.namespace }}/my-instrumentation"
+          restart: true
+      get_all:
+        enabled: false
+        export_dir: "/tmp/k8s"
+      restore_global:
+        enabled: false
+        import_dir: "/tmp/k8s"
+      list_images:
+        enabled: false
+        registry_url: "http://192.168.6.111:5000"
+        username: admin
+        password: Harbor12345
+```
+
+##### （2） run operations task
+```shell
+make operation
 ```
 
 ***
