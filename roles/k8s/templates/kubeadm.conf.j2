@@ -40,7 +40,6 @@ kubernetesVersion: {{ kubernetes.version }}
 networking:
   dnsDomain: cluster.local
   serviceSubnet: {{ kubernetes.apiserver.network.service_subnet }}
-  podSubnet: {{ kubernetes.apiserver.network.pod_subnet }}
 scheduler: {}
 
 ---
