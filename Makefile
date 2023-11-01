@@ -13,7 +13,7 @@ docker:
 
 .PHONY := install_docker
 install_docker:
-	if grep -i "debian"  /etc/os-release &> /dev/null;then apt-get -y install docker-ce=${docker_version};   elif grep -i "redhat" /etc/os-release &>/dev/null;then yum -y install docker-ce-${docker_version};   fi
+	if grep -i "debian"  /etc/os-release &> /dev/null;then apt-get -y install docker-ce=`apt list -a docker-ce | awk '{print $$2}' | grep ${docker_version}`;   elif grep -i "redhat" /etc/os-release &>/dev/null;then yum -y install docker-ce-${docker_version};   fi
 	systemctl restart docker
 	systemctl enable docker
 

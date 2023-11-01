@@ -6,6 +6,7 @@
     selinux:
       state: disabled
     notify: reboot host
+    ignore_errors: True
   - name: include docker role
     include_role:
       name: docker
